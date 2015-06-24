@@ -1,11 +1,11 @@
-# GSVPanoDepth.js
+# GSVPanoCartesianCoordinates.js
 
 A JavaScript library that downloads and extracts depth maps from Google Street View.
 
 ## Usage
 
 ```html
-<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false" type="text/javascript"></script> 
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false" type="text/javascript"></script>
 <script src="jquery.min.js" type="text/javascript"></script>
 <script src="jquery.base64.min.js" type="text/javascript"></script>
 <script src="zpipe.min.js" type="text/javascript"></script>

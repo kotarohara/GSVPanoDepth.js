@@ -1,10 +1,11 @@
 var GSVPANO = GSVPANO || {};
-GSVPANO.PanoDepthLoader = function (parameters) {
+GSVPANO.PanoCartesianCoordinatesLoader = function (parameters) {
 
     'use strict';
 
     var _parameters = parameters || {},
-        onDepthLoad = null;
+        onDepthLoad = null,
+        onCartesianCoordinatesLoad = null;
 
     this.load = function(panoId) {
         var self = this,
@@ -17,26 +18,34 @@ GSVPANO.PanoDepthLoader = function (parameters) {
                 dataType: 'jsonp'
             })
             .done(function(data, textStatus, xhr) {
-                var decoded, depthMap;
+                var decoded; //, depthMap;
+                var cartesianCoordinates;
 
                 try {
                     decoded = self.decode(data.model.depth_map);
-                    depthMap = self.parse(decoded);
+                    // depthMap = self.parse(decoded);
+                    cartesianCoordinates = self.parse(decoded);
                 } catch(e) {
                     console.error("Error loading depth map for pano " + panoId + "\n" + e.message + "\nAt " + e.filename + "(" + e.lineNumber + ")");
-                    depthMap = self.createEmptyDepthMap();
+                    // depthMap = self.createEmptyDepthMap();
+                    cartesianCoordinates = self.createEmptyCartesianCoordinates();
                 }
-                if(self.onDepthLoad) {
-                    self.depthMap = depthMap;
-                    self.onDepthLoad();
+                if(self.onCartesianCoordinatesLoad) {
+                    // self.depthMap = depthMap;
+                    self.cartesianCoordinates = cartesianCoordinates;
+                    // self.onDepthLoad();
+                    self.onCartesianCoordinatesLoad();
                 }
             })
             .fail(function(xhr, textStatus, errorThrown) {
                 console.error("Request failed: " + url + "\n" + textStatus + "\n" + errorThrown);
-                var depthMap = self.createEmptyDepthMap();
-                if(self.onDepthLoad) {
-                    self.depthMap = depthMap;
-                    self.onDepthLoad();
+                // var depthMap = self.createEmptyDepthMap();
+                var cartesianCoordinates = self.createEmptyCartesianCoordinates();
+                if(self.onCartesianCoordinatesLoad) {
+                    // self.depthMap = depthMap;
+                    self.cartesianCoordinates = cartesianCoordinates;
+                    // self.onDepthLoad();
+                    self.onCartesianCoordinatesLoad();
                 }
             })
     }
@@ -157,19 +166,90 @@ GSVPANO.PanoDepthLoader = function (parameters) {
         };
     }
 
+    this.computeCartesianCoordinates = function(header, indices, planes) {
+        var depthMap = null,
+            cartesianCoordinates = null,
+            x, y,
+            planeIdx,
+            phi, theta,
+            v = [0, 0, 0],
+            w = header.width, h = header.height,
+            plane, t, p;
+
+        depthMap = new Float32Array(w*h);
+        cartesianCoordinates = new Float32Array(3 * w * h);
+
+        var sin_theta = new Float32Array(h);
+        var cos_theta = new Float32Array(h);
+        var sin_phi   = new Float32Array(w);
+        var cos_phi   = new Float32Array(w);
+
+        // KH: A note on spherical coordinates for myself
+        // http://mathworld.wolfram.com/SphericalCoordinates.html
+
+        // Mapping between each y pixel coordinate and a polar angle
+        for(y=0; y<h; ++y) {
+            theta = (h - y - 0.5) / h * Math.PI;
+            sin_theta[y] = Math.sin(theta);
+            cos_theta[y] = Math.cos(theta);
+        }
+        // Mapping between each x pixel coordinate and a azimuthal angle
+        for(x=0; x<w; ++x) {
+            phi = (w - x - 0.5) / w * 2 * Math.PI + Math.PI/2;
+            sin_phi[x] = Math.sin(phi);
+            cos_phi[x] = Math.cos(phi);
+        }
+
+        for(y=0; y<h; ++y) {
+            for(x=0; x<w; ++x) {
+                planeIdx = indices[y*w + x];
+
+                // A normal vector towards a pixel (x, y)
+                v[0] = sin_theta[y] * cos_phi[x];
+                v[1] = sin_theta[y] * sin_phi[x];
+                v[2] = cos_theta[y];
+
+                if(planeIdx > 0) {
+                    plane = planes[planeIdx];
+                    // Get a depth t. Then compute the xyz coordinate of the
+                    // point of intereste from t and v.
+                    t = Math.abs(plane.d / (v[0] * plane.n[0] + v[1] * plane.n[1] + v[2] * plane.n[2]));
+                    // depthMap[y*w + (w-x-1)] = t;
+                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 1)] = t * v[0];
+                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 2)] = t * v[1];
+                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 3)] = t * v[2];
+                } else {
+                    // depthMap[y*w + (w-x-1)] = 9999999999999999999.;
+                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 1)] = 9999999999999999999.
+                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 2)] = 9999999999999999999.
+                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 3)] = 9999999999999999999.
+                }
+            }
+        }
+
+        return {
+            width: w,
+            height: h,
+            cartesianCoordinates: cartesianCoordinates
+        };
+    }
+
     this.parse = function(depthMap) {
         var self = this,
             depthMapData,
             header,
             data,
-            depthMap;
+            depthMap,
+            cartesianCoordinates;
 
         depthMapData = new DataView(depthMap.buffer);
         header = self.parseHeader(depthMapData);
         data = self.parsePlanes(header, depthMapData);
-        depthMap = self.computeDepthMap(header, data.indices, data.planes);
+        // depthMap = self.computeDepthMap(header, data.indices, data.planes);
+        cartesianCoordinates = self.computeCartesianCoordinates(header, data.indices, data.planes);
 
-        return depthMap;
+        // return depthMap;
+        return cartesianCoordinates;
     }
 
     this.createEmptyDepthMap = function() {
@@ -182,4 +262,16 @@ GSVPANO.PanoDepthLoader = function (parameters) {
             depthMap.depthMap[i] = 9999999999999999999.;
         return depthMap;
     }
+
+    this.createEmptyCartesianCoordinates = function() {
+        var cartesianCoordinates = {
+            width: 512,
+            height: 256,
+            cartesianCoordinates: new Float32Array(512*256*3)
+        };
+        for(var i=0; i<512*256*3; ++i)
+          cartesianCoordinates.cartesianCoordinates[i] = 9999999999999999999.;
+        return cartesianCoordinates;
+    }
+
 };

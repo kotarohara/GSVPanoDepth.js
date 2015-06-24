@@ -1,11 +1,11 @@
 var GSVPANO = GSVPANO || {};
-GSVPANO.PanoCartesianCoordinatesLoader = function (parameters) {
+GSVPANO.PanoPointCloudLoader = function (parameters) {
 
     'use strict';
 
     var _parameters = parameters || {},
         onDepthLoad = null,
-        onCartesianCoordinatesLoad = null;
+        onPointCloudLoad = null;
 
     this.load = function(panoId) {
         var self = this,
@@ -19,33 +19,33 @@ GSVPANO.PanoCartesianCoordinatesLoader = function (parameters) {
             })
             .done(function(data, textStatus, xhr) {
                 var decoded; //, depthMap;
-                var cartesianCoordinates;
+                var pointCloud;
 
                 try {
                     decoded = self.decode(data.model.depth_map);
                     // depthMap = self.parse(decoded);
-                    cartesianCoordinates = self.parse(decoded);
+                    pointCloud = self.parse(decoded);
                 } catch(e) {
                     console.error("Error loading depth map for pano " + panoId + "\n" + e.message + "\nAt " + e.filename + "(" + e.lineNumber + ")");
                     // depthMap = self.createEmptyDepthMap();
-                    cartesianCoordinates = self.createEmptyCartesianCoordinates();
+                    pointCloud = self.createEmptyPointCloud();
                 }
-                if(self.onCartesianCoordinatesLoad) {
+                if(self.onPointCloudLoad) {
                     // self.depthMap = depthMap;
-                    self.cartesianCoordinates = cartesianCoordinates;
+                    self.pointCloud = pointCloud;
                     // self.onDepthLoad();
-                    self.onCartesianCoordinatesLoad();
+                    self.onPointCloudLoad();
                 }
             })
             .fail(function(xhr, textStatus, errorThrown) {
                 console.error("Request failed: " + url + "\n" + textStatus + "\n" + errorThrown);
                 // var depthMap = self.createEmptyDepthMap();
-                var cartesianCoordinates = self.createEmptyCartesianCoordinates();
-                if(self.onCartesianCoordinatesLoad) {
+                var pointCloud = self.createEmptyPointCloud();
+                if(self.onPointCloudLoad) {
                     // self.depthMap = depthMap;
-                    self.cartesianCoordinates = cartesianCoordinates;
+                    self.pointCloud = pointCloud;
                     // self.onDepthLoad();
-                    self.onCartesianCoordinatesLoad();
+                    self.onPointCloudLoad();
                 }
             })
     }
@@ -166,9 +166,9 @@ GSVPANO.PanoCartesianCoordinatesLoader = function (parameters) {
         };
     }
 
-    this.computeCartesianCoordinates = function(header, indices, planes) {
+    this.computePointCloud = function(header, indices, planes) {
         var depthMap = null,
-            cartesianCoordinates = null,
+            pointCloud = null,
             x, y,
             planeIdx,
             phi, theta,
@@ -177,7 +177,7 @@ GSVPANO.PanoCartesianCoordinatesLoader = function (parameters) {
             plane, t, p;
 
         depthMap = new Float32Array(w*h);
-        cartesianCoordinates = new Float32Array(3 * w * h);
+        pointCloud = new Float32Array(3 * w * h);
 
         var sin_theta = new Float32Array(h);
         var cos_theta = new Float32Array(h);
@@ -215,14 +215,14 @@ GSVPANO.PanoCartesianCoordinatesLoader = function (parameters) {
                     // point of intereste from t and v.
                     t = Math.abs(plane.d / (v[0] * plane.n[0] + v[1] * plane.n[1] + v[2] * plane.n[2]));
                     // depthMap[y*w + (w-x-1)] = t;
-                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 1)] = t * v[0];
-                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 2)] = t * v[1];
-                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 3)] = t * v[2];
+                    pointCloud[3 * y * w + (3 * (w - x) - 1)] = t * v[0];
+                    pointCloud[3 * y * w + (3 * (w - x) - 2)] = t * v[1];
+                    pointCloud[3 * y * w + (3 * (w - x) - 3)] = t * v[2];
                 } else {
                     // depthMap[y*w + (w-x-1)] = 9999999999999999999.;
-                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 1)] = 9999999999999999999.
-                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 2)] = 9999999999999999999.
-                    cartesianCoordinates[3 * y * w + (3 * (w - x) - 3)] = 9999999999999999999.
+                    pointCloud[3 * y * w + (3 * (w - x) - 1)] = 9999999999999999999.
+                    pointCloud[3 * y * w + (3 * (w - x) - 2)] = 9999999999999999999.
+                    pointCloud[3 * y * w + (3 * (w - x) - 3)] = 9999999999999999999.
                 }
             }
         }
@@ -230,7 +230,7 @@ GSVPANO.PanoCartesianCoordinatesLoader = function (parameters) {
         return {
             width: w,
             height: h,
-            cartesianCoordinates: cartesianCoordinates
+            pointCloud: pointCloud
         };
     }
 
@@ -240,16 +240,16 @@ GSVPANO.PanoCartesianCoordinatesLoader = function (parameters) {
             header,
             data,
             depthMap,
-            cartesianCoordinates;
+            pointCloud;
 
         depthMapData = new DataView(depthMap.buffer);
         header = self.parseHeader(depthMapData);
         data = self.parsePlanes(header, depthMapData);
         // depthMap = self.computeDepthMap(header, data.indices, data.planes);
-        cartesianCoordinates = self.computeCartesianCoordinates(header, data.indices, data.planes);
+        pointCloud = self.computePointCloud(header, data.indices, data.planes);
 
         // return depthMap;
-        return cartesianCoordinates;
+        return pointCloud;
     }
 
     this.createEmptyDepthMap = function() {
@@ -263,15 +263,15 @@ GSVPANO.PanoCartesianCoordinatesLoader = function (parameters) {
         return depthMap;
     }
 
-    this.createEmptyCartesianCoordinates = function() {
-        var cartesianCoordinates = {
+    this.createEmptyPointCloud = function() {
+        var pointCloud = {
             width: 512,
             height: 256,
-            cartesianCoordinates: new Float32Array(512*256*3)
+            pointCloud: new Float32Array(512*256*3)
         };
         for(var i=0; i<512*256*3; ++i)
-          cartesianCoordinates.cartesianCoordinates[i] = 9999999999999999999.;
-        return cartesianCoordinates;
+          pointCloud.pointCloud[i] = 9999999999999999999.;
+        return pointCloud;
     }
 
 };

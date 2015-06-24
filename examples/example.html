@@ -10,15 +10,15 @@
     <script src="js/zpipe.min.js" type="text/javascript"></script>
     <script src="js/GSVPano.js" type="text/javascript"></script>
     <script src="../src/GSVPanoDepth.js" type="text/javascript"></script>
-    <script src="../src/GSVPanoCartesianCoordinates.js" type="text/javascript"></script>
+    <script src="../src/GSVPanoPointCloud.js" type="text/javascript"></script>
     <script>
         function init() {
             var _panoLoader = new GSVPANO.PanoLoader({zoom: 1});
             var _depthLoader = new GSVPANO.PanoDepthLoader();
-            var _cartesianCoordinatesLoader = new GSVPANO.PanoCartesianCoordinatesLoader();
+            var _pointCloudLoader = new GSVPANO.PanoPointCloudLoader();
 
-            _cartesianCoordinatesLoader.onCartesianCoordinatesLoad = function () {
-              console.log(this.cartesianCoordinates);
+            _pointCloudLoader.onPointCloudLoad = function () {
+              console.log(this.pointCloud);
             }
 
             _depthLoader.onDepthLoad = function() {
@@ -55,7 +55,7 @@
             _panoLoader.onPanoramaLoad = function() {
                 document.body.appendChild(this.canvas);
                 _depthLoader.load(this.panoId);
-                _cartesianCoordinatesLoader.load(this.panoId);
+                _pointCloudLoader.load(this.panoId);
             };
 
             _panoLoader.load(new google.maps.LatLng(42.345601, -71.098348));

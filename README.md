@@ -1,6 +1,6 @@
-# GSVPanoCartesianCoordinates.js
+# GSVPanoPointCloud.js
 
-A JavaScript library that downloads and extracts 3d cartesian coordinates from Google Street View. This is an extension of GSVPanoDepth.js, which can be found in the following repo:  https://github.com/proog128/GSVPanoDepth.js .
+A JavaScript library that downloads and extracts 3d point cloud from Google Street View. This is an extension of GSVPanoDepth.js, which can be found in the following repo:  https://github.com/proog128/GSVPanoDepth.js .
 
 ## Usage
 
@@ -9,19 +9,19 @@ A JavaScript library that downloads and extracts 3d cartesian coordinates from G
 <script src="jquery.min.js" type="text/javascript"></script>
 <script src="jquery.base64.min.js" type="text/javascript"></script>
 <script src="zpipe.min.js" type="text/javascript"></script>
-<script src="GSVPanoCartesianCoordinates.js" type="text/javascript"></script>
+<script src="GSVPanoPointCloud.js" type="text/javascript"></script>
 ```
 
 ```js
-var cartesianCoordinatesLoader = new GSVPANO.PanoCartesianCoordinatesLoader();
+var pointCloudLoader = new GSVPANO.PanoPointCloudLoader();
 
-cartesianCoordinatesLoader.onCartesianCoordinatesLoad = function() {
+pointCloudLoader.onPointCloudLoad = function() {
 
     // Returns depth map in the following format:
     //
-    // this.cartesianCoordinates.width: width of depth map in pixels
-    // this.cartesianCoordinates.height: height of depth map in pixels
-    // this.cartesianCoordinates.cartesianCoordinates: Float32Array of size width*height that contains the depth at each pixel
+    // this.pointCloud.width: width of depth map in pixels
+    // this.pointCloud.height: height of depth map in pixels
+    // this.pointCloud.pointCloud: Float32Array of size width*height that contains the depth at each pixel
 
 };
 

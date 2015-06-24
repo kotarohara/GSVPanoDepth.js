@@ -1,6 +1,6 @@
 # GSVPanoCartesianCoordinates.js
 
-A JavaScript library that downloads and extracts depth maps from Google Street View.
+A JavaScript library that downloads and extracts 3d cartesian coordinates from Google Street View. This is an extension of GSVPanoDepth.js, which can be found in the following repo:  https://github.com/proog128/GSVPanoDepth.js .
 
 ## Usage
 
@@ -9,19 +9,19 @@ A JavaScript library that downloads and extracts depth maps from Google Street V
 <script src="jquery.min.js" type="text/javascript"></script>
 <script src="jquery.base64.min.js" type="text/javascript"></script>
 <script src="zpipe.min.js" type="text/javascript"></script>
-<script src="GSVPanoDepth.js" type="text/javascript"></script>
+<script src="GSVPanoCartesianCoordinates.js" type="text/javascript"></script>
 ```
 
 ```js
-var depthLoader = new GSVPANO.PanoDepthLoader();
+var cartesianCoordinatesLoader = new GSVPANO.PanoCartesianCoordinatesLoader();
 
-depthLoader.onDepthLoad = function() {
+cartesianCoordinatesLoader.onCartesianCoordinatesLoad = function() {
 
     // Returns depth map in the following format:
     //
-    // this.depthMap.width: width of depth map in pixels
-    // this.depthMap.height: height of depth map in pixels
-    // this.depthMap.depthMap: Float32Array of size width*height that contains the depth at each pixel
+    // this.cartesianCoordinates.width: width of depth map in pixels
+    // this.cartesianCoordinates.height: height of depth map in pixels
+    // this.cartesianCoordinates.cartesianCoordinates: Float32Array of size width*height that contains the depth at each pixel
 
 };
 

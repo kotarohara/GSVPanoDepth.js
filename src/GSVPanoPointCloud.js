@@ -215,14 +215,14 @@ GSVPANO.PanoPointCloudLoader = function (parameters) {
                     // point of intereste from t and v.
                     t = Math.abs(plane.d / (v[0] * plane.n[0] + v[1] * plane.n[1] + v[2] * plane.n[2]));
                     // depthMap[y*w + (w-x-1)] = t;
-                    pointCloud[3 * y * w + (3 * (w - x) - 1)] = t * v[0];
-                    pointCloud[3 * y * w + (3 * (w - x) - 2)] = t * v[1];
-                    pointCloud[3 * y * w + (3 * (w - x) - 3)] = t * v[2];
+                    pointCloud[3 * y * w + 3 * x] = _t * v[0];
+                    pointCloud[3 * y * w + 3 * x + 1] = _t * v[1];
+                    pointCloud[3 * y * w + 3 * x + 2] = _t * v[2];
                 } else {
                     // depthMap[y*w + (w-x-1)] = 9999999999999999999.;
-                    pointCloud[3 * y * w + (3 * (w - x) - 1)] = 9999999999999999999.
-                    pointCloud[3 * y * w + (3 * (w - x) - 2)] = 9999999999999999999.
-                    pointCloud[3 * y * w + (3 * (w - x) - 3)] = 9999999999999999999.
+                    pointCloud[3 * y * w + 3 * x] = 9999999999999999999.;
+                    pointCloud[3 * y * w + 3 * x + 1] = 9999999999999999999.;
+                    pointCloud[3 * y * w + 3 * x + 2] = 9999999999999999999.;
                 }
             }
         }

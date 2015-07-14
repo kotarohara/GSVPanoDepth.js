@@ -143,9 +143,11 @@ GSVPANO.PanoDepthLoader = function (parameters) {
                     plane = planes[planeIdx];
 
                     t = Math.abs( plane.d / (v[0]*plane.n[0] + v[1]*plane.n[1] + v[2]*plane.n[2]) );
-                    depthMap[y*w + (w-x-1)] = t;
+                    //depthMap[y * w + (w - x - 1)] = t;
+                    depthMap[y * w + x] = t;
                 } else {
-                    depthMap[y*w + (w-x-1)] = 9999999999999999999.;
+                    //depthMap[y * w + (w - x - 1)] = 9999999999999999999.;
+                    depthMap[y * w + x] = 9999999999999999999.;
                 }
             }
         }

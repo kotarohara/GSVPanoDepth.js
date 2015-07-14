@@ -172,32 +172,46 @@ GSVPANO.PanoPointCloudLoader = function (parameters) {
             x, y,
             planeIdx,
             phi, theta,
-            v = [0, 0, 0],
+            //v = [0, 0, 0],
+            _v = [0, 0, 0],
             w = header.width, h = header.height,
-            plane, t, p;
+            plane, // t,
+            p, _t;
 
-        depthMap = new Float32Array(w*h);
+        //depthMap = new Float32Array(w*h);
         pointCloud = new Float32Array(3 * w * h);
 
-        var sin_theta = new Float32Array(h);
-        var cos_theta = new Float32Array(h);
-        var sin_phi   = new Float32Array(w);
-        var cos_phi   = new Float32Array(w);
+        //var sin_theta = new Float32Array(h);
+        //var cos_theta = new Float32Array(h);
+        //var sin_phi   = new Float32Array(w);
+        //var cos_phi   = new Float32Array(w);
+        var _sin_theta = new Float32Array(w);
+        var _cos_theta = new Float32Array(w);
+        var _sin_phi   = new Float32Array(h);
+        var _cos_phi   = new Float32Array(h);
 
         // KH: A note on spherical coordinates for myself
         // http://mathworld.wolfram.com/SphericalCoordinates.html
 
         // Mapping between each y pixel coordinate and a polar angle
         for(y=0; y<h; ++y) {
-            theta = (h - y - 0.5) / h * Math.PI;
-            sin_theta[y] = Math.sin(theta);
-            cos_theta[y] = Math.cos(theta);
+            //theta = (h - y - 0.5) / h * Math.PI;
+            //sin_theta[y] = Math.sin(theta);
+            //cos_theta[y] = Math.cos(theta);
+
+            phi = (h - y - 0.5) / h * Math.PI;
+            _sin_phi[y] = Math.sin(phi);
+            _cos_phi[y] = Math.cos(phi);
         }
         // Mapping between each x pixel coordinate and a azimuthal angle
         for(x=0; x<w; ++x) {
-            phi = (w - x - 0.5) / w * 2 * Math.PI + Math.PI/2;
-            sin_phi[x] = Math.sin(phi);
-            cos_phi[x] = Math.cos(phi);
+            //phi = (w - x - 0.5) / w * 2 * Math.PI + Math.PI/2;
+            //sin_phi[x] = Math.sin(phi);
+            //cos_phi[x] = Math.cos(phi);
+
+            theta = (w - x - 0.5) / w * 2 * Math.PI + Math.PI/2;
+            _sin_theta[x] = Math.sin(theta);
+            _cos_theta[x] = Math.cos(theta);
         }
 
         for(y=0; y<h; ++y) {
@@ -205,19 +219,24 @@ GSVPANO.PanoPointCloudLoader = function (parameters) {
                 planeIdx = indices[y*w + x];
 
                 // A normal vector towards a pixel (x, y)
-                v[0] = sin_theta[y] * cos_phi[x];
-                v[1] = sin_theta[y] * sin_phi[x];
-                v[2] = cos_theta[y];
+                //v[0] = sin_theta[y] * cos_phi[x];
+                //v[1] = sin_theta[y] * sin_phi[x];
+                //v[2] = cos_theta[y];
+
+                _v[0] = _sin_phi[y] * _cos_theta[x];
+                _v[1] = _sin_phi[y] * _sin_theta[x];
+                _v[2] = _cos_phi[y];
 
                 if(planeIdx > 0) {
                     plane = planes[planeIdx];
                     // Get a depth t. Then compute the xyz coordinate of the
                     // point of intereste from t and v.
-                    t = Math.abs(plane.d / (v[0] * plane.n[0] + v[1] * plane.n[1] + v[2] * plane.n[2]));
+                    //t = Math.abs(plane.d / (v[0] * plane.n[0] + v[1] * plane.n[1] + v[2] * plane.n[2]));
+                    _t = Math.abs(plane.d / (_v[0] * plane.n[0] + _v[1] * plane.n[1] + _v[2] * plane.n[2]))
                     // depthMap[y*w + (w-x-1)] = t;
-                    pointCloud[3 * y * w + 3 * x] = _t * v[0];
-                    pointCloud[3 * y * w + 3 * x + 1] = _t * v[1];
-                    pointCloud[3 * y * w + 3 * x + 2] = _t * v[2];
+                    pointCloud[3 * y * w + 3 * x] = _t * _v[0];
+                    pointCloud[3 * y * w + 3 * x + 1] = _t * _v[1];
+                    pointCloud[3 * y * w + 3 * x + 2] = _t * _v[2];
                 } else {
                     // depthMap[y*w + (w-x-1)] = 9999999999999999999.;
                     pointCloud[3 * y * w + 3 * x] = 9999999999999999999.;
